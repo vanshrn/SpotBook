@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Services</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        function logout() {
+            // Using form submission to ensure proper POST request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'backend/logout.php';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="shop_dashboard.html" class="site-link">
+                <img src="images/spotbook_logo.png" alt="SpotBook Logo" class="logo-img">  
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="#" onclick="logout(); return false;">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="add-service-section">
+            <h1>Add New Service</h1>
+            <form id="addServiceForm">
+                <label for="service_name">Service Name:</label>
+                <input type="text" id="service_name" name="service_name" required>
+
+                <label for="duration">Duration (Minutes):</label>
+                <input type="number" id="duration" name="duration" required min="15" step="5">
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea>
+
+                <button type="submit">Add Service</button>
+            </form>
+            <div id="add-message"></div>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>Your Current Services</h2>
+        <p>Your customers see these services on the booking page.</p>
+        <div id="services-offered-list">
+            </div>
+
+        <p style="margin-top: 20px;">
+            <a href="shop_bookings.html"><button>View Today's Queue/Bookings</button></a>
+        </p>
+        <a href="shop_dashboard.html">Back to Dashboard</a>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const listContainer = document.getElementById('services-offered-list');
+            const addMessageDiv = document.getElementById('add-message');
+
+
+            // --- Function to attach listeners to Delete buttons ---
+            function attachDeleteListeners() {
+                document.querySelectorAll('.delete-service-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const serviceId = e.target.dataset.serviceId;
+                        if (confirm('Are you sure you want to delete this service? This may affect existing bookings!')) {
+                            fetch('backend/delete_service.php', {
+                                method: 'POST',
+                                body: new URLSearchParams({ service_id: serviceId }),
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                addMessageDiv.textContent = data.message;
+                                addMessageDiv.style.color = (data.status === 'success' ? 'green' : 'red');
+                                if (data.status === 'success') {
+                                    fetchServicesList(); // Reload the list
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+
+            // --- Function to fetch and display services (Updated for Card Layout and Delete Button) ---
+            function fetchServicesList() {
+                listContainer.innerHTML = '<p>Loading services...</p>';
+                fetch('backend/get_shop_services.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        listContainer.innerHTML = '';
+                        if (data.status === 'success' && data.services.length > 0) {
+                            data.services.forEach(service => {
+                                const item = document.createElement('div');
+                                item.className = 'service-item-card'; // Styling class
+                                item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 8px;';
+
+                                // Left side content
+                                const content = document.createElement('div');
+                                content.innerHTML = `
+                                    <h3>${service.name}</h3>
+                                    <p style="color: #007BFF;">Duration: ${service.duration} minutes</p>
+                                    <p style="font-style: italic; font-size: 0.9em;">${service.description}</p>
+                                `;
+                                
+                                // Right side delete button
+                                const deleteButton = document.createElement('button');
+                                deleteButton.className = 'delete-service-btn';
+                                deleteButton.dataset.serviceId = service.id;
+                                deleteButton.textContent = 'Delete';
+                                deleteButton.style.cssText = 'background-color: #dc3545; width: auto; padding: 8px 15px; margin: 0;';
+
+                                item.appendChild(content);
+                                item.appendChild(deleteButton);
+                                listContainer.appendChild(item);
+                            });
+                            
+                            attachDeleteListeners(); // Attach listener after all buttons are created
+
+                        } else {
+                            listContainer.innerHTML = `<p>${data.message || 'No services are currently linked to your shop.'}</p>`;
+                        }
+                    })
+                    .catch(error => {
+                        listContainer.innerHTML = '<p>Error loading services.</p>';
+                        console.error('Error fetching services:', error);
+                    });
+            }
+
+            // --- Form Submission Logic ---
+            document.getElementById('addServiceForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                fetch('backend/add_service.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    addMessageDiv.textContent = data.message;
+                    addMessageDiv.style.color = (data.status === 'success' ? 'green' : 'red');
+
+                    if (data.status === 'success') {
+                        e.target.reset(); // Clear form
+                        fetchServicesList(); // Reload the list
+                    }
+                })
+                .catch(error => {
+                    addMessageDiv.textContent = 'Error processing request.';
+                    addMessageDiv.style.color = 'red';
+                    console.error('Add service request failed:', error);
+                });
+            });
+            
+            // Initial call to load the list
+            fetchServicesList();
+        });
+    </script>
+</body>
+</html>

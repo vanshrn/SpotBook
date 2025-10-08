@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Keeper Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="shop_dashboard.html" class="site-link">
+                <img src="images/spotbook_logo.png" alt="SpotBook Logo" class="logo-img">  
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="backend/logout.php">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Shop Keeper Dashboard</h1>
+        
+        <div id="dashboard-content">
+            <p>Loading shop status...</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if shop is registered via the backend endpoint
+            fetch('backend/check_shop.php')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('dashboard-content');
+                    
+                    if (data.status === 'registered') {
+                        // Shop is REGISTERED: Show management links
+                        content.innerHTML = `
+                            <h2>Welcome, ${data.shop_name}!</h2>
+                            <p>Manage your bookings and services.</p>
+                            <div class="vertical-buttons" style="flex-direction: row; gap: 10px;">
+                                <a href="shop_bookings.html"><button>View Today's Queue/Bookings</button></a>
+                                <a href="shop_services.html"><button>Manage Services</button></a>
+                            </div>
+                        `;
+                    } else if (data.status === 'unregistered') {
+                        // Shop is NOT registered: Prompt registration
+                        content.innerHTML = `
+                            <h2>Welcome! You need to set up your shop.</h2>
+                            <p>Get started by listing your shop details.</p>
+                            <a href="upload_shop.html"><button>Register My Shop</button></a>
+                        `;
+                    } else {
+                        // Error State
+                        content.innerHTML = `<p style="color: red;">Error: ${data.message || 'Could not check shop status.'}</p>`;
+                    }
+                })
+                .catch(error => {
+                     document.getElementById('dashboard-content').innerHTML = `<p style="color: red;">Failed to fetch dashboard data. Please check console.</p>`;
+                     console.error("Dashboard content loading failed:", error);
+                });
+        });
+    </script>
+</body>
+</html>

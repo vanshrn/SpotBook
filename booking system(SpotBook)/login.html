@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <input type="hidden" id="role" name="role" value="">
+            
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+        <div id="message"></div>
+        <p>Don't have an account? <a id="register-link" href="register.html">Register here</a></p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        document.getElementById('role').value = role; // Set the hidden role field
+        
+        // Update link to registration page to include the role
+        document.getElementById('register-link').href = `register.html?role=${role}`;
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+
+            fetch('backend/login.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('message');
+                if (data.status === 'success') {
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = 'green';
+                    setTimeout(() => {
+                        // Redirect logic is now in backend/login.php, but we keep this for initial success
+                        // The actual redirect will be handled by the backend logic later.
+                        window.location.href = data.redirect; 
+                    }, 100); 
+                } else {
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = 'red';
+                }
+            })
+        });
+    </script>
+</body>
+</html>

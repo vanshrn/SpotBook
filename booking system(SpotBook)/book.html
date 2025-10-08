@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Slot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="categories.html" class="site-link">
+                <img src="images/towntime_logo.png" alt="TownTime Logo" class="logo-img"> 
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="my_bookings.html">View My Bookings</a>
+            <a href="backend/logout.php">Logout</a>
+        </nav>
+    </header>
+
+    <div class="booking-container">
+        <h1 id="shop-title" class="page-header-title">Booking at [Shop Name]</h1>
+        <div id="shop-info"></div>
+
+        <h2>Select Time Slot</h2>
+        <form id="bookingForm">
+            <input type="hidden" id="service-id" name="service">
+            <input type="hidden" id="shop-id" name="shop_id">
+            
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="date">Select a Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="time">Available Slots (Queue):</label>
+            <select id="time" name="time" required disabled>
+                <option value="">-- Select a Date First --</option>
+            </select>
+
+            <button type="submit">Reserve Slot</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register My Shop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Register Your Shop Details</h1>
+        <p>Select your shop type to begin linking your services.</p>
+        <form id="uploadShopForm">
+            <label for="shop_name">Shop Name:</label>
+            <input type="text" id="shop_name" name="shop_name" required>
+
+            <label for="address">Full Address:</label>
+            <textarea id="address" name="address" required></textarea>
+
+            <label for="category_id">Shop Category:</label>
+            <select id="category_id" name="category_id" required>
+                <option value="">-- Select Category --</option>
+                </select>
+
+            <button type="submit">Complete Shop Registration</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const categorySelect = document.getElementById('category_id');
+            const messageDiv = document.getElementById('message'); 
+
+            // Fetch categories and populate the dropdown
+            fetch('backend/get_categories.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.categories.length > 0) {
+                        data.categories.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.name;
+                            categorySelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching categories:', error));
+
+            // Form Submission Logic
+            document.getElementById('uploadShopForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const selectedCategoryId = categorySelect.value; 
+                
+                // VALIDATION: Check if a valid category was selected (value should not be empty string)
+                if (!selectedCategoryId) {
+                    alert('Please select a valid shop category.');
+                    return;
+                }
+                
+                // Ensure category_id is correctly set in FormData before sending
+                formData.set('category_id', selectedCategoryId);
+
+                fetch('backend/upload_shop.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = (data.status === 'success' ? 'green' : 'red');
+                    
+                    if (data.status === 'success') {
+                        // Redirect to the service management page 
+                        setTimeout(() => { window.location.href = 'shop_services.html'; }, 1000); 
+                    }
+                })
+                .catch(error => {
+                    messageDiv.textContent = 'An unexpected error occurred during submission.';
+                    messageDiv.style.color = 'red';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

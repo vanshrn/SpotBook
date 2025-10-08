@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Queue</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        function logout() {
+            window.location.href = 'backend/logout.php';
+        }
+    </script>
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="shop_dashboard.html" class="site-link">
+                <img src="images/spotbook_logo.png" alt="SpotBook Logo" class="logo-img"> 
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="#" onclick="logout(); return false;">Logout</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <h1>Today's Queue</h1>
+        <p>Bookings for: <input type="date" id="queue-date"></p>
+        <div id="queue-list">
+            </div>
+        <p style="margin-top: 20px;"><a href="shop_dashboard.html">Back to Dashboard</a></p>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('queue-date');
+            const queueList = document.getElementById('queue-list');
+            
+            // Set default date to today and trigger load
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+            
+            function fetchQueue(date) {
+                queueList.innerHTML = '<p>Loading queue...</p>';
+                
+                fetch(`backend/get_shop_queue.php?date=${date}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        queueList.innerHTML = '';
+                        if (data.status === 'success' && data.queue.length > 0) {
+                            data.queue.forEach(booking => {
+                                const item = document.createElement('div');
+                                item.className = 'queue-item'; 
+                                item.innerHTML = `
+                                    <strong>${booking.booking_time} - ${booking.end_time}</strong> (${booking.service_name})<br>
+                                    Client: ${booking.client_name} (${booking.client_email})
+                                `;
+                                queueList.appendChild(item);
+                            });
+                        } else {
+                            queueList.innerHTML = `<p>${data.message || 'No bookings found for this date.'}</p>`;
+                        }
+                    })
+                    .catch(error => {
+                         queueList.innerHTML = '<p>Error loading queue.</p>';
+                         console.error('Error fetching queue:', error);
+                    });
+            }
+            
+            // Initial load and date change listener
+            fetchQueue(today);
+            dateInput.addEventListener('change', (e) => fetchQueue(e.target.value));
+        });
+    </script>
+</body>
+</html>

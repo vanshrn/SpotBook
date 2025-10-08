@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shops</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="categories.html" class="site-link">
+                <img src="images/spotbook_logo.png" alt="SpotBook Logo" class="logo-img">  
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="my_bookings.html">View My Bookings</a>
+            <a href="backend/logout.php">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container"> 
+        <h1 id="category-title" class="page-header-title">Shops for [Category Name]</h1> 
+        
+        <div id="shops-list">
+            <p>Loading shops...</p>
+        </div>
+        
+        <p style="margin-top: 20px;"><a href="categories.html">Back to Categories</a></p>
+    </div>
+    
+    <script src="script.js"></script> 
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('category_id');
+            const categoryName = urlParams.get('category_name');
+            const list = document.getElementById('shops-list');
+
+            document.getElementById('category-title').textContent = `Shops for ${categoryName}`;
+
+            checkLoginStatus().then(data => {
+                if (!data.isLoggedIn || data.userRole !== 'customer') {
+                    window.location.href = 'login.html?role=customer';
+                    return;
+                }
+
+                list.innerHTML = '<p>Fetching shops for category...</p>';
+                
+                fetch(`backend/get_shops.php?category_id=${categoryId}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        list.innerHTML = '';
+
+                        if (data.status === 'success' && data.shops.length > 0) {
+                            data.shops.forEach(shop => {
+                                const shopItem = document.createElement('div');
+                                shopItem.className = 'shop-listing-card';
+                                
+                                // Display services offered
+                                const servicesList = shop.service_names.join(', ');
+                                
+                                shopItem.innerHTML = `
+                                    <h2>${shop.shop_name}</h2>
+                                    <p>Address: ${shop.address}</p>
+                                    <p>Offering: ${servicesList}</p>
+                                    <a href="book.html?shop_id=${shop.id}&service_id=${shop.service_ids[0]}">View Queue & Book</a>
+                                `;
+                                list.appendChild(shopItem);
+                            });
+                        } else {
+                            list.innerHTML = '<p>No shops found for this category. Please check back later!</p>';
+                        }
+                    })
+                    .catch(error => {
+                        list.innerHTML = `<p style="color: red;">Error fetching shop data: ${error.message}</p>`;
+                        console.error("Error fetching shops:", error);
+                    });
+            });
+        });
+    </script>
+    
+    </body>
+</html>

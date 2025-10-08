@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Services</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-area">
+            <a href="categories.html" class="site-link">
+                <img src="images/spotbook_logo.png" alt="SpotBook Logo" class="logo-img"> 
+                <span class="site-name">SpotBook</span>
+            </a>
+        </div>
+        <nav class="customer-nav">
+            <a href="my_bookings.html">View My Bookings</a>
+            <a href="backend/logout.php">Logout</a>
+        </nav>
+    </header>
+
+    <div class="full-width-content">
+        <h1 class="page-header-title">Select a Service Category</h1>
+        <h2 class="page-subtitle">What are you looking for?</h2>
+
+        <div id="categories-container" class="categories-grid">
+            </div>
+    </div>
+    
+    <script src="script.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check login status and fetch categories
+            checkLoginStatus().then(data => {
+                // Ensure user is logged in and is a customer
+                if (!data.isLoggedIn || data.userRole !== 'customer') {
+                    window.location.href = 'login.html?role=customer'; 
+                    return;
+                }
+
+                fetch('backend/get_categories.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        const container = document.getElementById('categories-container');
+                        if (data.status === 'success' && data.categories.length > 0) {
+                            data.categories.forEach(category => {
+                                const card = document.createElement('a');
+                                card.href = `shops.html?category_id=${category.id}&category_name=${category.name}`;
+                                card.className = 'category-card';
+                                card.innerHTML = `<h3>${category.name}</h3>`;
+                                container.appendChild(card);
+                            });
+                        } else {
+                            container.innerHTML = '<p>No categories available.</p>';
+                        }
+                    })
+                    .catch(error => console.error('Error fetching categories:', error));
+            });
+        });
+    </script>
+</body>
+</html>
